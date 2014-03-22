@@ -1,4 +1,4 @@
-GAME = (function(){
+GAME = (function(game){
 
 	function Entity(){
 		this.vertecies = new List();
@@ -14,11 +14,12 @@ GAME = (function(){
 
 	function loop(){
 
-
-
 		requestAnimationFrame(loop);
 	}
 
+	function init(){
 
+	}
 
-})();
+	return game;
+})({});
