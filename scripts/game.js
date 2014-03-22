@@ -30,6 +30,7 @@ GAME = (function(game){
 	function init(){
 
 		game.Screen = new CanvasEx({ width: 640, height: 960});
+		game.Screen.attach("screen");
 	}
 
 	function loop(){
