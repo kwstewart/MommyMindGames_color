@@ -12,14 +12,14 @@ GAME = (function(game){
 	function ShaderProgram(webglContext, name, uniforms, attribs){
 		var _id = getId();
 
-		Object.setProperty(this, "id", {
+		Object.defineProperty(this, "id", {
 			set: function(){
 				console.warn("Cannot set readonly property id.");
 			},
 			get: function(){
 				return _id;
 			}
-		})
+		});
 
 		var vertexShaderName = name+"-vertex";
 		var fragmentShaderName = name+"-fragment";
@@ -58,8 +58,23 @@ GAME = (function(game){
 	function Entity(args){
 		args = args || {};
 
-		this.vertecies = args.vertices;
+		var _id = getId();
+
+		Object.defineProperty(this, "id", {
+			set: function(){
+				console.warn("Cannot set readonly property id.");
+			},
+			get: function(){
+				return _id;
+			}
+		});
+
+		this.vertices = args.vertices;
 		this.shaderProgram = args.shaderProgram;
+
+		this.toFloat32Array = function(){
+			return new Float32Array(this.vertices);
+		}
 	}
 
 	function GameState(){
@@ -67,7 +82,11 @@ GAME = (function(game){
 	}
 
 	function Scene(){
-		this.objects = new List.List();
+		this.entities = [];
+
+		this.addEntity = function(entity){
+
+		}
 
 		this.getFloat32Array = function(){
 			var obs = Object.keys(this.objects);
@@ -90,6 +109,25 @@ GAME = (function(game){
 	}
 
 	// *************************************
+	// Derived Classes
+	// *************************************
+
+	function Square(x, y, w, h, shader){
+		var verts = [x, y,     // 1          1,5-- 6
+			x, y+h,   // 2           |  \ |
+			x+w, y+h, // 3           2 --3,4
+			x+w, y+h, // 4
+			x, y,     // 5
+			x+w, y];  // 6
+
+		Entity.apply(this, [{
+			vertices: verts,
+			shaderProgram: shader
+			}]
+		);
+	}
+
+	// *************************************
 	// Functions
 	// *************************************
 
@@ -97,6 +135,8 @@ GAME = (function(game){
 	function getId(){
 		return ++globalIdCounter;
 	}
+
+
 
 	var StartScreen_GameState = new GameState();
 	var background = new Entity();
