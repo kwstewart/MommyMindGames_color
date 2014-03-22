@@ -11,13 +11,33 @@
 
   <body>
 
-    <script type="text/vertex-shader" id="background-shader-vertex">
-
-    </script>
+  <script id="shader-fs" type="x-shader/x-fragment">
+        precision mediump float;
     
-    <script type="text/fragment-shader" id="background-shader-fragment">
-
-    </script>
+        varying vec2 vTextureCoord;
+    
+        uniform sampler2D uSampler;
+    
+        void main(void) {
+            gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+        }
+  </script>
+  
+  <script id="shader-vs" type="x-shader/x-vertex">
+      attribute vec3 aVertexPosition;
+      attribute vec2 aTextureCoord;
+  
+      uniform mat4 uMVMatrix;
+      uniform mat4 uPMatrix;
+  
+      varying vec2 vTextureCoord;
+  
+  
+      void main(void) {
+          gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+          vTextureCoord = aTextureCoord;
+      }
+  </script>
 
     <div id="WebGL-container"></div>
     <!--<canvas id="WebGL-canvas"></canvas>-->
