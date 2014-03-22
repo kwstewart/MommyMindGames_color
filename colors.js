@@ -26,6 +26,7 @@ COLORGAME = (function(){
     colorGame.colors.HTML.yellow = "#FF0";
     colorGame.colors.HTML.cyan = "#0FF";
     colorGame.colors.HTML.magenta = "#F0F";
+    colorGame.colors.HTML.white = "#FFF";
   }
   
   
