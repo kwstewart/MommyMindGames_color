@@ -10,7 +10,7 @@ GAME = (function(game){
 	// uniforms => an array of uniform names as strings
 	// attribs => an array of attribs as strings
 	function ShaderProgram(webglContext, name, uniforms, attribs){
-		var _id = 0;
+		var _id = getId();
 
 		Object.setProperty(this, "id", {
 			set: function(){
@@ -55,9 +55,11 @@ GAME = (function(game){
 		this.img.src = filename;
 	}
 
-	function Entity(){
-		this.vertecies = new List.List();
-		this.shaderProgram = null;
+	function Entity(args){
+		args = args || {};
+
+		this.vertecies = args.vertices;
+		this.shaderProgram = args.shaderProgram;
 	}
 
 	function GameState(){
@@ -67,16 +69,34 @@ GAME = (function(game){
 	function Scene(){
 		this.objects = new List.List();
 
-		this.draw = function(){
-			this.objects.eachValue(function(n){
+		this.getFloat32Array = function(){
+			var obs = Object.keys(this.objects);
+			var total = 0;
+			for(var i = 0; i < obs.length; ++i) {
+				total += this.objects[obs[i]].getVerts().length;
+			}
 
-			});
+			var f = new Float32Array(total);
+			for(var i = 0; i < obs.length; ++i) {
+				var offset = (i==0)?0:obs[i-1].length;
+				f.set(this.objects[obs[i]].getVerts(), offset);
+			}
+			return f;
+		}
+
+		this.draw = function(){
+
 		}
 	}
 
 	// *************************************
 	// Functions
 	// *************************************
+
+	var globalIdCounter = 0;
+	function getId(){
+		return ++globalIdCounter;
+	}
 
 	var StartScreen_GameState = new GameState();
 	var background = new Entity();
@@ -88,6 +108,8 @@ GAME = (function(game){
 	}
 
 	function loop(){
+
+
 
 		requestAnimationFrame(loop);
 	}
