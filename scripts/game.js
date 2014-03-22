@@ -29,6 +29,8 @@ GAME = (function(game){
 
 	function init(){
 
+
+		game.Screen = new CanvasEx({ width: 640, height: 960});
 	}
 
 	function loop(){
