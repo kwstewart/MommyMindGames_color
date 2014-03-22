@@ -9,7 +9,7 @@ GAME = (function(game){
 	}
 
 	function Entity(){
-		this.vertecies = new List();
+		this.vertecies = new List.List();
 	}
 
 	function GameState(){
@@ -29,7 +29,6 @@ GAME = (function(game){
 
 	function init(){
 
-
 		game.Screen = new CanvasEx({ width: 640, height: 960});
 	}
 
@@ -37,6 +36,8 @@ GAME = (function(game){
 
 		requestAnimationFrame(loop);
 	}
+
+	game.init = init;
 
 	return game;
 })({});
