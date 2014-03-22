@@ -28,7 +28,7 @@ GAME = (function(game){
 		this.fragmentShader = createShaderFromScriptElement(webglContext, fragmentShaderName);
 
 		this.binary = createProgram(webglContext, [this.vertexShader, this.fragmentShader]);
-
+		webglContext.useProgram(this.binary);
 		// go through the vars and attach them to the program
 
 
@@ -85,25 +85,41 @@ GAME = (function(game){
 		this.entities = [];
 
 		this.addEntity = function(entity){
-
+			this.entities.push(entity);
 		}
 
 		this.getFloat32Array = function(){
-			var obs = Object.keys(this.objects);
-			var total = 0;
-			for(var i = 0; i < obs.length; ++i) {
-				total += this.objects[obs[i]].getVerts().length;
-			}
-
-			var f = new Float32Array(total);
-			for(var i = 0; i < obs.length; ++i) {
-				var offset = (i==0)?0:obs[i-1].length;
-				f.set(this.objects[obs[i]].getVerts(), offset);
-			}
-			return f;
+//			var obs = Object.keys(this.objects);
+//			var total = 0;
+//			for(var i = 0; i < obs.length; ++i) {
+//				total += this.objects[obs[i]].getVerts().length;
+//			}
+//
+//			var f = new Float32Array(total);
+//			for(var i = 0; i < obs.length; ++i) {
+//				var offset = (i==0)?0:obs[i-1].length;
+//				f.set(this.objects[obs[i]].getVerts(), offset);
+//			}
+//			return f;
 		}
 
-		this.draw = function(){
+		this.draw = function(webglContext){
+
+			var buffer = webglContext.createBuffer();
+			webglContext.bindBuffer(webglContext.ARRAY_BUFFER, buffer);
+			webglContext.bufferData(
+				webglContext.ARRAY_BUFFER,
+				this.entities[0].toFloat32Array(),
+				webglContext.STATIC_DRAW
+			);
+
+
+			webglContext.enableVertexAttribArray(this.entities[0].shaderProgram.a_position);
+			webglContext.vertexAttribPointer(this.entities[0].shaderProgram.a_position, 2, webglContext.FLOAT, false, 20, 0);
+			webglContext.enableVertexAttribArray(this.entities[0].shaderProgram.a_color);
+			webglContext.vertexAttribPointer(this.entities[0].shaderProgram.a_color, 3, webglContext.FLOAT, false, 20, 8);
+
+			webglContext.drawArrays(webglContext.TRIANGLES, 0, 6);
 
 		}
 	}
@@ -113,12 +129,14 @@ GAME = (function(game){
 	// *************************************
 
 	function Square(x, y, w, h, shader){
-		var verts = [x, y,     // 1          1,5-- 6
-			x, y+h,   // 2           |  \ |
-			x+w, y+h, // 3           2 --3,4
-			x+w, y+h, // 4
-			x, y,     // 5
-			x+w, y];  // 6
+		var verts = [
+			x, y,     0.0, 1.0, 0.0,  // 1          1,5-- 6
+			x, y+h,   1.0, 1.0, 1.0,  // 2           |  \ |
+			x+w, y+h, 1.0, 0.0, 0.0,  // 3           2 --3,4
+			x+w, y+h, 1.0, 1.0, 0.0,  // 4
+			x, y,     0.0, 0.0, 1.0,  // 5
+			x+w, y,   0.0, 0.0, 0.0   // 6
+		];
 
 		Entity.apply(this, [{
 			vertices: verts,
@@ -136,30 +154,37 @@ GAME = (function(game){
 		return ++globalIdCounter;
 	}
 
-
-
-	var StartScreen_GameState = new GameState();
-	var background = new Entity();
-
 	function init(){
 
 		game.Screen = new CanvasEx({ width: 640, height: 960});
 		game.Screen.attach("screen");
+
+		var SimpleShader = new ShaderProgram(game.Screen.context, "simple", [], ["a_position", "a_color"]);
+//		var StartScreen_GameState = new GameState();
+		var gameScene = new Scene();
+		var background = new Square(-0.2, 0.2, 0.2, 0.2, SimpleShader);
+
+		gameScene.addEntity(background);
+
+
+
+		function loop(){
+
+			gameScene.draw(game.Screen.context);
+
+			requestAnimationFrame(loop);
+		}
+
+		loop();
 	}
 
-	function loop(){
-
-
-
-		requestAnimationFrame(loop);
-	}
 
 	// *************************************
 	// Expose API
 	// *************************************
 
 	game.init = init;
-	game.loop = loop;
+//	game.loop = loop;
 
 	return game;
 })({});
