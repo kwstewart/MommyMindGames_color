@@ -105,6 +105,9 @@ GAME = (function(game){
 
 		this.draw = function(webglContext){
 
+			var mvp = new Matrix4();
+			mvp.setOrtho(0, 640, 0, 960, 1, -100);
+
 			var buffer = webglContext.createBuffer();
 			webglContext.bindBuffer(webglContext.ARRAY_BUFFER, buffer);
 			webglContext.bufferData(
@@ -113,9 +116,17 @@ GAME = (function(game){
 				webglContext.STATIC_DRAW
 			);
 
+//			function setMatrixUniforms() {
+//				gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, new Float32Array(pMatrix.flatten()));
+//				gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, new Float32Array(mvMatrix.flatten()));
+//			}
+
+			webglContext.uniformMatrix4fv(this.entities[0].shaderProgram.u_mvp, false, mvp.elements);
+//			this.entities[0].shaderProgram
 
 			webglContext.enableVertexAttribArray(this.entities[0].shaderProgram.a_position);
 			webglContext.vertexAttribPointer(this.entities[0].shaderProgram.a_position, 2, webglContext.FLOAT, false, 20, 0);
+
 			webglContext.enableVertexAttribArray(this.entities[0].shaderProgram.a_color);
 			webglContext.vertexAttribPointer(this.entities[0].shaderProgram.a_color, 3, webglContext.FLOAT, false, 20, 8);
 
@@ -159,7 +170,7 @@ GAME = (function(game){
 		game.Screen = new CanvasEx({ width: 640, height: 960});
 		game.Screen.attach("screen");
 
-		var SimpleShader = new ShaderProgram(game.Screen.context, "simple", [], ["a_position", "a_color"]);
+		var SimpleShader = new ShaderProgram(game.Screen.context, "simple", ["u_mvp"], ["a_position", "a_color"]);
 //		var StartScreen_GameState = new GameState();
 		var gameScene = new Scene();
 		var background = new Square(-0.2, 0.2, 0.2, 0.2, SimpleShader);
@@ -169,7 +180,8 @@ GAME = (function(game){
 
 
 		function loop(){
-
+			game.Screen.context.clearColor(0.0, 0.0, 0.0, 1.0);
+			game.Screen.context.clear(game.Screen.context.COLOR_BUFFER_BIT);
 			gameScene.draw(game.Screen.context);
 
 			requestAnimationFrame(loop);
