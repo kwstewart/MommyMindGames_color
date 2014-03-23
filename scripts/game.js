@@ -173,7 +173,7 @@ GAME = (function(game){
 		var SimpleShader = new ShaderProgram(game.Screen.context, "simple", ["u_mvp"], ["a_position", "a_color"]);
 //		var StartScreen_GameState = new GameState();
 		var gameScene = new Scene();
-		var background = new Square(-0.2, 0.2, 0.2, 0.2, SimpleShader);
+		var background = new Square(40, 40, 100, 100, SimpleShader);
 
 		gameScene.addEntity(background);
 
