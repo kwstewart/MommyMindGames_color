@@ -48,11 +48,22 @@ GAME = (function(game){
 
 	}
 
-	function ImageEx(filepath){
-		var filename = filepath;
+	function TextureEx(webglContext, filepath){
+		this.gl = webglContext;
 
-		this.img = new Image();
-		this.img.src = filename;
+		this.texture = this.gl.createTexture();
+		this.image = new Image();
+
+		var self = this;
+		this.image.onload = function(){
+			self.gl.bindTexture(self.gl.TEXTURE_2D, self.texture);
+			self.gl.pixelStorei(self.gl.UNPACK_FLIP_Y_WEBGL, true);
+			self.gl.texImage2D(self.gl.TEXTURE_2D, 0, self.gl.RGBA, self.gl.RGBA, self.gl.UNSIGNED_BYTE, this);
+			self.gl.texParameteri(self.gl.TEXTURE_2D, self.gl.TEXTURE_MAG_FILTER, self.gl.NEAREST);
+			self.gl.texParameteri(self.gl.TEXTURE_2D, self.gl.TEXTURE_MIN_FILTER, self.gl.NEAREST);
+			self.gl.bindTexture(self.gl.TEXTURE_2D, null);
+		};
+		this.image.src = filepath;
 	}
 
 	function Entity(args){
@@ -88,21 +99,6 @@ GAME = (function(game){
 			this.entities.push(entity);
 		}
 
-		this.getFloat32Array = function(){
-//			var obs = Object.keys(this.objects);
-//			var total = 0;
-//			for(var i = 0; i < obs.length; ++i) {
-//				total += this.objects[obs[i]].getVerts().length;
-//			}
-//
-//			var f = new Float32Array(total);
-//			for(var i = 0; i < obs.length; ++i) {
-//				var offset = (i==0)?0:obs[i-1].length;
-//				f.set(this.objects[obs[i]].getVerts(), offset);
-//			}
-//			return f;
-		}
-
 		this.draw = function(webglContext){
 
 			var mvp = new Matrix4();
@@ -116,19 +112,20 @@ GAME = (function(game){
 				webglContext.STATIC_DRAW
 			);
 
-//			function setMatrixUniforms() {
-//				gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, new Float32Array(pMatrix.flatten()));
-//				gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, new Float32Array(mvMatrix.flatten()));
-//			}
-
 			webglContext.uniformMatrix4fv(this.entities[0].shaderProgram.u_mvp, false, mvp.elements);
-//			this.entities[0].shaderProgram
+
+			webglContext.activeTexture(webglContext.TEXTURE0);
+			webglContext.bindTexture(webglContext.TEXTURE_2D, globalTexture.texture);
+			webglContext.uniform1i(this.entities[0].shaderProgram.u_sampler, 0);
 
 			webglContext.enableVertexAttribArray(this.entities[0].shaderProgram.a_position);
-			webglContext.vertexAttribPointer(this.entities[0].shaderProgram.a_position, 2, webglContext.FLOAT, false, 20, 0);
+			webglContext.vertexAttribPointer(this.entities[0].shaderProgram.a_position, 2, webglContext.FLOAT, false, 28, 0);
 
 			webglContext.enableVertexAttribArray(this.entities[0].shaderProgram.a_color);
-			webglContext.vertexAttribPointer(this.entities[0].shaderProgram.a_color, 3, webglContext.FLOAT, false, 20, 8);
+			webglContext.vertexAttribPointer(this.entities[0].shaderProgram.a_color, 3, webglContext.FLOAT, false, 28, 8);
+
+			webglContext.enableVertexAttribArray(this.entities[0].shaderProgram.a_texture_coord);
+			webglContext.vertexAttribPointer(this.entities[0].shaderProgram.a_texture_coord, 2, webglContext.FLOAT, false, 28, 20);
 
 			webglContext.drawArrays(webglContext.TRIANGLES, 0, 6);
 
@@ -141,12 +138,12 @@ GAME = (function(game){
 
 	function Square(x, y, w, h, shader){
 		var verts = [
-			x, y,     0.0, 0.0, 1.0,  // 1
-			x, y+h,   1.0, 1.0, 1.0,  // 2
-			x+w, y+h, 1.0, 1.0, 0.0,  // 3
-			x+w, y+h, 1.0, 1.0, 0.0,  // 4
-			x, y,     0.0, 0.0, 1.0,  // 5
-			x+w, y,   1.0, 1.0, 1.0   // 6
+			x, y,     0.0, 0.0, 1.0,  0.0, 1.0, // 1 - 0, 1
+			x, y+h,   1.0, 1.0, 1.0,  0.0, 0.0, // 2 - 0, 0
+			x+w, y+h, 1.0, 1.0, 0.0,  1.0, 0.0, // 3 - 1, 0
+			x+w, y+h, 1.0, 1.0, 0.0,  1.0, 0.0, // 4
+			x, y,     0.0, 0.0, 1.0,  0.0, 1.0, // 1
+			x+w, y,   1.0, 1.0, 1.0,  1.0, 1.0  // 6
 		];
 
 		Entity.apply(this, [{
@@ -170,14 +167,18 @@ GAME = (function(game){
 		game.Screen = new CanvasEx({ width: 640, height: 960});
 		game.Screen.attach("screen");
 
-		var SimpleShader = new ShaderProgram(game.Screen.context, "simple", ["u_mvp"], ["a_position", "a_color"]);
+		var SimpleShader = new ShaderProgram(game.Screen.context, "simple", ["u_mvp", "u_sampler"], ["a_position", "a_color", "a_texture_coord"]);
 //		var StartScreen_GameState = new GameState();
 		var gameScene = new Scene();
 		var background = new Square(40, 40, 100, 100, SimpleShader);
 
 		gameScene.addEntity(background);
 
+		globalTexture = new TextureEx(game.Screen.context, "./images/testImage.png");
 
+
+		game.Screen.context.enable(game.Screen.context.DEPTH_TEST);
+//		game.Screen.context.enable(game.Screen.context.TEXTURE_2D)
 
 		function loop(){
 			game.Screen.context.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -187,7 +188,10 @@ GAME = (function(game){
 			requestAnimationFrame(loop);
 		}
 
-		loop();
+		setTimeout(function(){
+			loop();
+		}, 500);
+
 	}
 
 
