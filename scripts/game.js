@@ -106,7 +106,7 @@ GAME = (function(game){
 		this.draw = function(webglContext){
 
 			var mvp = new Matrix4();
-			mvp.setOrtho(0, 640, 0, 960, 1, -100);
+			mvp.setOrtho(0, 640, 960, 0, 1, -100);
 
 			var buffer = webglContext.createBuffer();
 			webglContext.bindBuffer(webglContext.ARRAY_BUFFER, buffer);
