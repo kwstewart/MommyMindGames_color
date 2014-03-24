@@ -122,14 +122,14 @@ function CanvasEx(args) {
 
 }
 
-function Promise(){
+function Promise() {
 	this.doneFn = function(args){};
 
 	this.done = function(doneFn){
 		this.doneFn = doneFn;
-	}
+	};
 
-	this.isDone = function(){
-		this.doneFn({});
-	}
+	this.isDone = function(rtn){
+		this.doneFn(rtn);
+	};
 }

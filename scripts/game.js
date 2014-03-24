@@ -49,65 +49,63 @@ GAME = (function(game){
 	}
 
 	// for now this function accepts an array of texture keys and texture filenames as a flat array... I know
-	function loadTextures(textureFilenames){
-		this.imageNames = textureFilenames;
-		this.done = 0;
+	function loadImages(imageFilenames){
+		var imageNames = imageFilenames;
+		var imagesLoaded = 0;
+		var promise = new Promise();
 
+		var imageHash = {};
 
+		for(var idx = 0; idx < imageNames.length; idx += 2){
 
-		for(var idx in this.imageNames){
-			this.imageNames[idx].done(
-				function(){
+			var imageKey = imageNames[idx];
+			var imagePath = imageNames[idx+1];
+			var image = new Image();
 
-				}
-			)
+			image.onload = function(){
+				imageHash[imageKey] = image;
+				imagesLoaded += 1;
+
+				if(imagesLoaded == imageNames.length / 2)
+					promise.isDone(imageHash);
+			}
+
+			image.src = imagePath;
 		}
+
+		return promise;
 	}
 
-	function TextureEx(webglContext, filepath, npot){
+	function TextureEx(webglContext, image, npot){
 
 		this.gl = webglContext;
 
 		this.texture = this.gl.createTexture();
-		this.image = new Image();
+		this.image = image;
+		this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
+		this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
+		this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, this.image);
 
-		this.load = function(){
-			var self = this,
-				promise = new Promise();
+		var sqWidth = Math.sqrt(this.width),
+			sqHeight = Math.sqrt(this.height);
 
-			this.image.onload = function(){
-				self.gl.bindTexture(self.gl.TEXTURE_2D, self.texture);
-				self.gl.pixelStorei(self.gl.UNPACK_FLIP_Y_WEBGL, true);
-				self.gl.texImage2D(self.gl.TEXTURE_2D, 0, self.gl.RGBA, self.gl.RGBA, self.gl.UNSIGNED_BYTE, this);
+		if(npot == undefined)
+			npot = (sqWidth % 1 != 0 && sqHeight % 1 != 0);
 
-				var sqWidth = Math.sqrt(this.width),
-					sqHeight = Math.sqrt(this.height);
-
-				if(npot == undefined)
-					npot = (sqWidth % 1 != 0 && sqHeight % 1 != 0);
-
-				if(npot){
-					self.gl.texParameteri(self.gl.TEXTURE_2D, self.gl.TEXTURE_MAG_FILTER, self.gl.LINEAR);
-					self.gl.texParameteri(self.gl.TEXTURE_2D, self.gl.TEXTURE_MIN_FILTER, self.gl.LINEAR);
-					self.gl.texParameteri(self.gl.TEXTURE_2D, self.gl.TEXTURE_WRAP_S, self.gl.CLAMP_TO_EDGE);
-					self.gl.texParameteri(self.gl.TEXTURE_2D, self.gl.TEXTURE_WRAP_T, self.gl.CLAMP_TO_EDGE);
-				}
-				else{
-					self.gl.texParameteri(self.gl.TEXTURE_2D, self.gl.TEXTURE_MAG_FILTER, self.gl.NEAREST);
-					self.gl.texParameteri(self.gl.TEXTURE_2D, self.gl.TEXTURE_MIN_FILTER, self.gl.NEAREST);
-				}
-
-				self.gl.bindTexture(self.gl.TEXTURE_2D, null);
-				promise.isDone();
-			};
-			this.image.src = filepath;
-
-			return promise;
+		if(npot){
+			this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+			this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+			this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+			this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+		}
+		else{
+			this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
+			this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
 		}
 
+		this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+	};
 
-
-	}
 
 	function Entity(args){
 		args = args || {};
@@ -217,17 +215,30 @@ GAME = (function(game){
 
 		gameScene.addEntity(background);
 
-		globalTexture = new TextureEx(game.Screen.context, "./images/background.png");
+		globalTexture = null //new TextureEx(game.Screen.context, "./images/background.png");
 
+		var doneLoadingImages = false;
+		globalImagesMap = {};
 
+		loadImages(["background", "./images/background.png"]).done(function(imagesHash){
+			globalImagesMap = imagesHash;
+
+			globalTexture = new TextureEx(game.Screen.context, globalImagesMap["background"]);
+
+			doneLoadingImages = true;
+		});
 
 		game.Screen.context.enable(game.Screen.context.DEPTH_TEST);
 //		game.Screen.context.enable(game.Screen.context.TEXTURE_2D)
 
 		function loop(){
+
 			game.Screen.context.clearColor(0.0, 0.0, 0.0, 1.0);
 			game.Screen.context.clear(game.Screen.context.COLOR_BUFFER_BIT);
-			gameScene.draw(game.Screen.context);
+
+			// this will be handled by gamestates later, but for now this is a good test
+			if(doneLoadingImages)
+				gameScene.draw(game.Screen.context);
 
 			requestAnimationFrame(loop);
 		}
