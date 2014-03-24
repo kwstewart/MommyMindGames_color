@@ -50,7 +50,7 @@ GAME = (function(game){
 
 	// for now this function accepts an array of texture keys and texture filenames as a flat array... I know
 	function loadImages(imageFilenames){
-		var imageNames = imageFilenames;
+		var imageNames = imageFilenames.splice();
 		var imagesLoaded = 0;
 		var promise = new Promise();
 
@@ -131,6 +131,12 @@ GAME = (function(game){
 
 	function GameState(){
 		this.scene = new Scene();
+
+		this.onEnter = function(){};
+		this.onExit = function(){};
+
+		this.onLoad = function(){};
+		this.onRender = function(){};
 	}
 
 	function Scene(){
@@ -169,7 +175,6 @@ GAME = (function(game){
 			webglContext.vertexAttribPointer(this.entities[0].shaderProgram.a_texture_coord, 2, webglContext.FLOAT, false, 28, 20);
 
 			webglContext.drawArrays(webglContext.TRIANGLES, 0, 6);
-
 		}
 	}
 
@@ -178,13 +183,17 @@ GAME = (function(game){
 	// *************************************
 
 	function Square(x, y, w, h, shader){
+		// modelView coords (2), color (3), texture coords (2), texture Index (1)
+		// all floats or 4 bytes
+		// 2*4 + 3*4 + 2*4 + 1*4 => 8 + 12 + 8 + 4 => 32
+
 		var verts = [
-			x, y,     0.0, 0.0, 0.3,    0.0, 1.0, // 1 - 0, 1
-			x, y+h,   0.0, 0.0, 0.3,    0.0, 0.0, // 2 - 0, 0
-			x+w, y+h, 0.0, 0.0, 0.3,    1.0, 0.0, // 3 - 1, 0
-			x+w, y+h, 0.0, 0.0, 0.3,    1.0, 0.0, // 4
-			x, y,     0.0, 0.0, 0.3,    0.0, 1.0, // 1
-			x+w, y,   0.0, 0.0, 0.3,    1.0, 1.0  // 6
+			x, y,        0.1, 0.1, 0.4,    0.0, 1.0, // 1 - 0, 1
+			x, y+h,      0.1, 0.1, 0.4,    0.0, 0.0, // 2 - 0, 0
+			x+w, y+h,    0.1, 0.1, 0.4,    1.0, 0.0, // 3 - 1, 0
+			x+w, y+h,    0.1, 0.1, 0.4,    1.0, 0.0, // 4
+			x, y,        0.1, 0.1, 0.4,    0.0, 1.0, // 1
+			x+w, y,      0.1, 0.1, 0.4,    1.0, 1.0  // 6
 		];
 
 		Entity.apply(this, [{
@@ -220,7 +229,7 @@ GAME = (function(game){
 		var doneLoadingImages = false;
 		globalImagesMap = {};
 
-		loadImages(["background", "./images/background.png"]).done(function(imagesHash){
+		loadImages(["background", "./images/bg-glow-black.png"]).done(function(imagesHash){
 			globalImagesMap = imagesHash;
 
 			globalTexture = new TextureEx(game.Screen.context, globalImagesMap["background"]);
@@ -229,7 +238,6 @@ GAME = (function(game){
 		});
 
 		game.Screen.context.enable(game.Screen.context.DEPTH_TEST);
-//		game.Screen.context.enable(game.Screen.context.TEXTURE_2D)
 
 		function loop(){
 
@@ -246,7 +254,6 @@ GAME = (function(game){
 		setTimeout(function(){
 			loop();
 		}, 500);
-
 	}
 
 
