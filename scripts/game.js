@@ -50,7 +50,7 @@ GAME = (function(game){
 
 	// for now this function accepts an array of texture keys and texture filenames as a flat array... I know
 	function loadImages(imageFilenames){
-		var imageNames = imageFilenames;
+		var imageNames = imageFilenames.slice();
 		var imagesLoaded = 0;
 		var promise = new Promise();
 
@@ -75,6 +75,41 @@ GAME = (function(game){
 
 		return promise;
 	}
+
+  function loadSound(soundFilenames) {
+    var soundNames = soundFilename.slice();
+    var soundsLoaded = 0;
+    var promise = new Promise();
+    
+    var soundHash = {};
+    
+    for(var idx = 0; idx < soundNames.length; idx += 2){
+      
+      var soundKey = soundNames[idx];
+      var soundPath = soundNames[idx+1];
+      var sound = document.createElement("sound");
+      sound.id = "sound-"+soundKey;      
+      
+      sound.onload = function() {
+        soundHash[soundKey] = sound;
+        soundsLoaded += 1;
+        
+				if(soundsLoaded == soundNames.length / 2)
+					promise.isDone(soundHash);
+        
+      }
+      
+      sound.src = soundSrc;
+    }
+    
+    return promise;
+  }
+  
+  function playAudio(soundKey) {
+    var sound = document.getElementById("sound-"+soundKey).cloneNode(true);
+    sound.play();
+    sound.parentNode.removeChild(sound);
+  }
 
 	function TextureEx(webglContext, image, npot){
 
@@ -130,8 +165,16 @@ GAME = (function(game){
 	}
 
 	function GameState(){
-		this.scene = new Scene();
-	}
+    this.scene = new Scene();
+    //this.scenes = [];
+    
+    this.onEnter = function(){};
+    this.onExit = function(){};
+    
+    this.onLoad = function(){};
+    this.onRender = function(){};
+  }
+
 
 	function Scene(){
 		this.entities = [];
