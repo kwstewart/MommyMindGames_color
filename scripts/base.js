@@ -121,3 +121,15 @@ function CanvasEx(args) {
 	_context = canvasElement.getContext("webgl");
 
 }
+
+function Promise(){
+	this.doneFn = function(args){};
+
+	this.done = function(doneFn){
+		this.doneFn = doneFn;
+	}
+
+	this.isDone = function(){
+		this.doneFn({});
+	}
+}

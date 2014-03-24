@@ -48,22 +48,65 @@ GAME = (function(game){
 
 	}
 
-	function TextureEx(webglContext, filepath){
+	// for now this function accepts an array of texture keys and texture filenames as a flat array... I know
+	function loadTextures(textureFilenames){
+		this.imageNames = textureFilenames;
+		this.done = 0;
+
+
+
+		for(var idx in this.imageNames){
+			this.imageNames[idx].done(
+				function(){
+
+				}
+			)
+		}
+	}
+
+	function TextureEx(webglContext, filepath, npot){
+
 		this.gl = webglContext;
 
 		this.texture = this.gl.createTexture();
 		this.image = new Image();
 
-		var self = this;
-		this.image.onload = function(){
-			self.gl.bindTexture(self.gl.TEXTURE_2D, self.texture);
-			self.gl.pixelStorei(self.gl.UNPACK_FLIP_Y_WEBGL, true);
-			self.gl.texImage2D(self.gl.TEXTURE_2D, 0, self.gl.RGBA, self.gl.RGBA, self.gl.UNSIGNED_BYTE, this);
-			self.gl.texParameteri(self.gl.TEXTURE_2D, self.gl.TEXTURE_MAG_FILTER, self.gl.NEAREST);
-			self.gl.texParameteri(self.gl.TEXTURE_2D, self.gl.TEXTURE_MIN_FILTER, self.gl.NEAREST);
-			self.gl.bindTexture(self.gl.TEXTURE_2D, null);
-		};
-		this.image.src = filepath;
+		this.load = function(){
+			var self = this,
+				promise = new Promise();
+
+			this.image.onload = function(){
+				self.gl.bindTexture(self.gl.TEXTURE_2D, self.texture);
+				self.gl.pixelStorei(self.gl.UNPACK_FLIP_Y_WEBGL, true);
+				self.gl.texImage2D(self.gl.TEXTURE_2D, 0, self.gl.RGBA, self.gl.RGBA, self.gl.UNSIGNED_BYTE, this);
+
+				var sqWidth = Math.sqrt(this.width),
+					sqHeight = Math.sqrt(this.height);
+
+				if(npot == undefined)
+					npot = (sqWidth % 1 != 0 && sqHeight % 1 != 0);
+
+				if(npot){
+					self.gl.texParameteri(self.gl.TEXTURE_2D, self.gl.TEXTURE_MAG_FILTER, self.gl.LINEAR);
+					self.gl.texParameteri(self.gl.TEXTURE_2D, self.gl.TEXTURE_MIN_FILTER, self.gl.LINEAR);
+					self.gl.texParameteri(self.gl.TEXTURE_2D, self.gl.TEXTURE_WRAP_S, self.gl.CLAMP_TO_EDGE);
+					self.gl.texParameteri(self.gl.TEXTURE_2D, self.gl.TEXTURE_WRAP_T, self.gl.CLAMP_TO_EDGE);
+				}
+				else{
+					self.gl.texParameteri(self.gl.TEXTURE_2D, self.gl.TEXTURE_MAG_FILTER, self.gl.NEAREST);
+					self.gl.texParameteri(self.gl.TEXTURE_2D, self.gl.TEXTURE_MIN_FILTER, self.gl.NEAREST);
+				}
+
+				self.gl.bindTexture(self.gl.TEXTURE_2D, null);
+				promise.isDone();
+			};
+			this.image.src = filepath;
+
+			return promise;
+		}
+
+
+
 	}
 
 	function Entity(args){
@@ -138,12 +181,12 @@ GAME = (function(game){
 
 	function Square(x, y, w, h, shader){
 		var verts = [
-			x, y,     0.0, 0.0, 1.0,  0.0, 1.0, // 1 - 0, 1
-			x, y+h,   1.0, 1.0, 1.0,  0.0, 0.0, // 2 - 0, 0
-			x+w, y+h, 1.0, 1.0, 0.0,  1.0, 0.0, // 3 - 1, 0
-			x+w, y+h, 1.0, 1.0, 0.0,  1.0, 0.0, // 4
-			x, y,     0.0, 0.0, 1.0,  0.0, 1.0, // 1
-			x+w, y,   1.0, 1.0, 1.0,  1.0, 1.0  // 6
+			x, y,     0.0, 0.0, 0.3,    0.0, 1.0, // 1 - 0, 1
+			x, y+h,   0.0, 0.0, 0.3,    0.0, 0.0, // 2 - 0, 0
+			x+w, y+h, 0.0, 0.0, 0.3,    1.0, 0.0, // 3 - 1, 0
+			x+w, y+h, 0.0, 0.0, 0.3,    1.0, 0.0, // 4
+			x, y,     0.0, 0.0, 0.3,    0.0, 1.0, // 1
+			x+w, y,   0.0, 0.0, 0.3,    1.0, 1.0  // 6
 		];
 
 		Entity.apply(this, [{
@@ -170,11 +213,12 @@ GAME = (function(game){
 		var SimpleShader = new ShaderProgram(game.Screen.context, "simple", ["u_mvp", "u_sampler"], ["a_position", "a_color", "a_texture_coord"]);
 //		var StartScreen_GameState = new GameState();
 		var gameScene = new Scene();
-		var background = new Square(40, 40, 100, 100, SimpleShader);
+		var background = new Square(0, 0, 640, 960, SimpleShader);
 
 		gameScene.addEntity(background);
 
-		globalTexture = new TextureEx(game.Screen.context, "./images/testImage.png");
+		globalTexture = new TextureEx(game.Screen.context, "./images/background.png");
+
 
 
 		game.Screen.context.enable(game.Screen.context.DEPTH_TEST);
