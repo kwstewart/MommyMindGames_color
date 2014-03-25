@@ -76,7 +76,7 @@ GAME = (function(game){
 		return promise;
 	}
 
-  function loadSound(soundFilenames) {
+  function loadSounds(soundFilenames) {
     var soundNames = soundFilename.slice();
     var soundsLoaded = 0;
     var promise = new Promise();
@@ -108,7 +108,7 @@ GAME = (function(game){
   function playAudio(soundKey) {
     var sound = document.getElementById("sound-"+soundKey).cloneNode(true);
     sound.play();
-    sound.parentNode.removeChild(sound);
+    sound.addEventListener("onended", function(evt){ sound.parentNode.removeChild(sound); })
   }
 
 	function TextureEx(webglContext, image, npot){
