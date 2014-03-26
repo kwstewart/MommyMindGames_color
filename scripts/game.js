@@ -92,7 +92,6 @@ GAME = (function(game){
       sound.id = "sound-"+soundKey;      
       
       sound.addEventListener('canplaythrough', function() { 
-        console.log("loaded sound");
         soundHash[soundKey] = sound;
         soundsLoaded += 1;
         
@@ -100,19 +99,19 @@ GAME = (function(game){
 					promise.isDone(soundHash);
         
       });
-      console.log("sound.src: "+soundPath);
+      sound.src = soundPath;
       
     }
     
     return promise;
   }
   
-  function playAudio(soundKey) {
-    var sound = soundHash[soundKey];
+  function playSound(soundKey) {
+    var sound = globalSoundsMap[soundKey].cloneNode(true);
     sound.play();
     sound.addEventListener("onended", function(evt){ console.log("sound ended"); })
   }
-  game.playAudio = playAudio;
+  game.playSound = playSound;
 
 	function TextureEx(webglContext, image, npot){
 
@@ -275,8 +274,13 @@ GAME = (function(game){
 			doneLoadingImages = true;
 		});
 		
+		
+		var doneLoadingSounds = false;
+		globalSoundsMap = {};
+		
 		loadSounds(["test","test.ogg"]).done(function(soundHash){
-		  console.log("loaded sounds, hash is: "+soundHash);
+		  globalSoundsMap = soundHash;
+		  doneLoadingSounds = true;
 		});
 
 		game.Screen.context.enable(game.Screen.context.DEPTH_TEST);
