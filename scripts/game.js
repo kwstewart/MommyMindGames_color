@@ -113,7 +113,17 @@ GAME = (function(game){
   }
   game.playSound = playSound;
 
-	function TextureEx(webglContext, image, npot){
+	/**
+	 * In the interest of saving some time on this adventure... since we are going to c++ anyway. I am adding an image id
+	 * @param webglContext (the gl context)
+	 * @param image (the loaded image object)
+	 * @param npot (non power of two)
+	 * @param imageId (id 0-31) note: this is such a bad idea. I am goign to have to revisit this code.
+	 * @constructor
+	 */
+	function TextureEx(webglContext, image, npot, imageId){
+		if(imageId < 0 || imageId > 31)
+			throw "Cannot bind image with id < 0 or > 31";
 
 		this.gl = webglContext;
 
@@ -141,6 +151,8 @@ GAME = (function(game){
 		}
 
 		this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+
+
 	};
 
 
@@ -215,6 +227,8 @@ GAME = (function(game){
 		}
 	}
 
+	function TextureStore
+
 	// *************************************
 	// Derived Classes
 	// *************************************
@@ -224,13 +238,15 @@ GAME = (function(game){
 		// all floats or 4 bytes
 		// 2*4 + 3*4 + 2*4 + 1*4 => 8 + 12 + 8 + 4 => 32
 
+
+
 		var verts = [
-			x, y,        0.1, 0.1, 0.4,    0.0, 1.0, // 1 - 0, 1
-			x, y+h,      0.1, 0.1, 0.4,    0.0, 0.0, // 2 - 0, 0
-			x+w, y+h,    0.1, 0.1, 0.4,    1.0, 0.0, // 3 - 1, 0
-			x+w, y+h,    0.1, 0.1, 0.4,    1.0, 0.0, // 4
-			x, y,        0.1, 0.1, 0.4,    0.0, 1.0, // 1
-			x+w, y,      0.1, 0.1, 0.4,    1.0, 1.0  // 6
+			x, y,        0.0, 0.09, 0.45,    0.0, 1.0, // 1 - 0, 1
+			x, y+h,      0.0, 0.09, 0.45,    0.0, 0.0, // 2 - 0, 0
+			x+w, y+h,    0.0, 0.09, 0.45,    1.0, 0.0, // 3 - 1, 0
+			x+w, y+h,    0.0, 0.09, 0.45,    1.0, 0.0, // 4
+			x, y,        0.0, 0.09, 0.45,    0.0, 1.0, // 1
+			x+w, y,      0.0, 0.09, 0.45,    1.0, 1.0  // 6
 		];
 
 		Entity.apply(this, [{
@@ -266,7 +282,7 @@ GAME = (function(game){
 		var doneLoadingImages = false;
 		globalImagesMap = {};
 
-		loadImages(["background", "./images/bg-glow-black.png"]).done(function(imagesHash){
+		loadImages(["background", "./images/background-radial.png"]).done(function(imagesHash){
 			globalImagesMap = imagesHash;
 
 			globalTexture = new TextureEx(game.Screen.context, globalImagesMap["background"]);
