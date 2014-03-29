@@ -294,7 +294,7 @@ GAME = (function(game){
 		var doneLoadingSounds = false;
 		globalSoundsMap = {};
 		
-		loadSounds(["test","test.ogg"]).done(function(soundHash){
+		loadSounds(["beep","beep.ogg"]).done(function(soundHash){
 		  globalSoundsMap = soundHash;
 		  doneLoadingSounds = true;
 		});
